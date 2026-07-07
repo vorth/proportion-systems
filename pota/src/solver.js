@@ -1,35 +1,27 @@
-import { loadPyodide } from 'pyodide';
+let worker = null;
+let nextId = 0;
+const pending = new Map();
 
-// Singleton Pyodide instance
-let pyodideInstance = null;
-let pyodidePromise = null;
+const getWorker = () => {
+  if (worker) return worker;
 
-// Load Pyodide and SymPy once
-const loadPyodideInstance = async () => {
-  if (pyodideInstance) return pyodideInstance;
-  if (pyodidePromise) return pyodidePromise;
-  
-  pyodidePromise = (async () => {
-    console.log('Loading Pyodide...');
-    const pyodide = await loadPyodide({
-      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.29.2/full/'
-    });
-    
-    console.log('Installing SymPy...');
-    await pyodide.loadPackage('sympy');
-    
-    // Load the Python solver code from file
-    console.log('Loading solve.py...');
-    const response = await fetch('./solve.py');
-    const pythonCode = await response.text();
-    await pyodide.runPythonAsync(pythonCode);
-    
-    console.log('Pyodide ready!');
-    pyodideInstance = pyodide;
-    return pyodide;
-  })();
-  
-  return pyodidePromise;
+  worker = new Worker(new URL('./solver.worker.js', import.meta.url), {
+    type: 'module',
+  });
+
+  worker.onmessage = ({ data: { id, result, error } }) => {
+    const request = pending.get(id);
+    if (!request) return;
+    pending.delete(id);
+
+    if (error) {
+      request.resolve({ has_positive_roots: false, error });
+    } else {
+      request.resolve(result);
+    }
+  };
+
+  return worker;
 };
 
 /**
@@ -37,18 +29,11 @@ const loadPyodideInstance = async () => {
  * @param {string} equationStr - Equation like "x = 1/(x) + 1 + x"
  * @returns {Promise<{has_positive_roots: boolean, solutions: string[], float_values: number[]}>}
  */
-export const solveEquation = async (equationStr) => {
-  const pyodide = await loadPyodideInstance();
-  
-  try {
-    const result = pyodide.runPython(`
-import json
-json.dumps(solve_equation(${JSON.stringify(equationStr)}))
-    `);
-    
-    return JSON.parse(result);
-  } catch (error) {
-    console.error('Error solving equation:', equationStr, error);
-    return { has_positive_roots: false, error: error.message };
-  }
+export const solveEquation = (equationStr) => {
+  const id = nextId++;
+
+  return new Promise((resolve) => {
+    pending.set(id, { resolve });
+    getWorker().postMessage({ id, equationStr });
+  });
 };
