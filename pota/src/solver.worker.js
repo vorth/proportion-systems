@@ -1,30 +1,22 @@
 import { loadPyodide } from 'pyodide';
 
-let pyodidePromise = null;
+const pyodidePromise = (async () => {
+  const pyodide = await loadPyodide({
+    indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.29.2/full/',
+  });
 
-const loadPyodideInstance = async () => {
-  if (pyodidePromise) return pyodidePromise;
+  await pyodide.loadPackage('sympy');
 
-  pyodidePromise = (async () => {
-    const pyodide = await loadPyodide({
-      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.29.2/full/',
-    });
+  const response = await fetch('/solve.py');
+  const pythonCode = await response.text();
+  await pyodide.runPythonAsync(pythonCode);
 
-    await pyodide.loadPackage('sympy');
-
-    const response = await fetch('/solve.py');
-    const pythonCode = await response.text();
-    await pyodide.runPythonAsync(pythonCode);
-
-    return pyodide;
-  })();
-
-  return pyodidePromise;
-};
+  return pyodide;
+})();
 
 self.onmessage = async ({ data: { id, equationStr } }) => {
   try {
-    const pyodide = await loadPyodideInstance();
+    const pyodide = await pyodidePromise;
 
     const result = pyodide.runPython(`
 import json

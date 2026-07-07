@@ -1,27 +1,20 @@
-let worker = null;
 let nextId = 0;
 const pending = new Map();
 
-const getWorker = () => {
-  if (worker) return worker;
+const worker = new Worker(new URL('./solver.worker.js', import.meta.url), {
+  type: 'module',
+});
 
-  worker = new Worker(new URL('./solver.worker.js', import.meta.url), {
-    type: 'module',
-  });
+worker.onmessage = ({ data: { id, result, error } }) => {
+  const request = pending.get(id);
+  if (!request) return;
+  pending.delete(id);
 
-  worker.onmessage = ({ data: { id, result, error } }) => {
-    const request = pending.get(id);
-    if (!request) return;
-    pending.delete(id);
-
-    if (error) {
-      request.resolve({ has_positive_roots: false, error });
-    } else {
-      request.resolve(result);
-    }
-  };
-
-  return worker;
+  if (error) {
+    request.resolve({ has_positive_roots: false, error });
+  } else {
+    request.resolve(result);
+  }
 };
 
 /**
@@ -34,6 +27,6 @@ export const solveEquation = (equationStr) => {
 
   return new Promise((resolve) => {
     pending.set(id, { resolve });
-    getWorker().postMessage({ id, equationStr });
+    worker.postMessage({ id, equationStr });
   });
 };
