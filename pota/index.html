@@ -57,6 +57,24 @@
         padding-block: 2rem;
       }
 
+      .nav-bar {
+        border-block-end: 1px solid darkgray;
+      }
+
+      .nav-buttons button {
+        padding: 6px 14px;
+        border: 1px solid darkgray;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .nav-buttons button.active {
+        background: #333;
+        color: white;
+        border-color: #333;
+      }
+
       input {
         width: 20rem;
         margin: auto;
@@ -122,11 +140,6 @@
     <noscript>The app requires JavaScript to be enabled</noscript>
     <script src="/src/index.jsx" type="module"></script>
 
-    <h1>Proportion Systems</h1>
-    <p>
-      This app illustrates proportion systems.
-      In each proportion system, the outer rectangle will be similar to all the smaller ones.
-    </p>
     <div id="root"></div>
   </body>
 </html>

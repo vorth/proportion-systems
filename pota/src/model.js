@@ -1,12 +1,10 @@
 
 // Each array is an inverse of a sum, except the top one, which is just a sum.
-//  So this means "1/(1+x)+1/(1+x+1/x)",
+//  So this means "1/x + 1/x + 1/x + 1/( 1 + 1 + 1 + 1/x )"
 export const test = [
-  1,
-  [ 1, 'x' ],
-  [ [ 'x' ], 'x', 1 ],
+  [ 'x' ], [ 'x' ], [ 'x' ],
+  [ 1, 1, 1, [ 'x' ] ],
 ];
-// x = 1 + 1/( 1 + x ) + 1/( 1/( x ) + x + 1 )
 
 export const generateExprs = function*( squares, rects )
 {

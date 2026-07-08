@@ -39,8 +39,8 @@ export const Equation = (props) =>
   return (
     <math class="equation" display="block">
       <mrow>
-        {/* <mi>x</mi>
-        <mo>=</mo> */}
+        <mi>x</mi>
+        <mo>=</mo>
         <CanonicalExpression tree={props.tree} inverse={false} />
       </mrow>
     </math>

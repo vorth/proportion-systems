@@ -11,22 +11,31 @@ worker.onmessage = ({ data: { id, result, error } }) => {
   pending.delete(id);
 
   if (error) {
-    request.resolve({ has_positive_roots: false, error });
+    request.resolve({ error });
   } else {
     request.resolve(result);
   }
 };
 
-/**
- * Get detailed solution for an equation
- * @param {string} equationStr - Equation like "x = 1/(x) + 1 + x"
- * @returns {Promise<{has_positive_roots: boolean, solutions: string[], float_values: number[]}>}
- */
-export const solveEquation = (equationStr) => {
+const request = (kind, equationStr) => {
   const id = nextId++;
 
   return new Promise((resolve) => {
     pending.set(id, { resolve });
-    worker.postMessage({ id, equationStr });
+    worker.postMessage({ id, kind, equationStr });
   });
 };
+
+/**
+ * Get the normalized general form (xⁿ = ...) of an equation, rendered as MathML.
+ * @param {string} equationStr - Equation like "x = 1/(x) + 1 + x"
+ * @returns {Promise<{general_form: string, general_form_mathml: string}>}
+ */
+export const getGeneralForm = (equationStr) => request('general_form', equationStr);
+
+/**
+ * Get positive real roots for an equation.
+ * @param {string} equationStr - Equation like "x = 1/(x) + 1 + x"
+ * @returns {Promise<{has_positive_roots: boolean, solutions: string[], float_values: number[]}>}
+ */
+export const getPositiveRoots = (equationStr) => request('roots', equationStr);
