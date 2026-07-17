@@ -83,10 +83,14 @@ def get_positive_roots(eq_str):
         eq, var = _parse_equation(eq_str)
         solutions = solve(eq, var)
 
-        # Filter for positive real solutions
+        # Filter for positive real solutions. Symbolic is_real/is_positive can
+        # come back None for exact forms of real roots of irreducible cubics
+        # (casus irreducibilis) and similar cases, so evaluate numerically
+        # instead of trusting the symbolic predicates.
         positive_real_solutions = []
         for sol in solutions:
-            if sol.is_real and sol.is_positive:
+            numeric = sol.evalf()
+            if abs(numeric.as_real_imag()[1]) < 1e-9 and numeric.as_real_imag()[0] > 0:
                 positive_real_solutions.append(sol)
 
         has_roots = len(positive_real_solutions) > 0
@@ -94,7 +98,7 @@ def get_positive_roots(eq_str):
         return {
             "has_positive_roots": has_roots,
             "solutions": [str(sol) for sol in positive_real_solutions],
-            "float_values": [float(sol.evalf()) for sol in positive_real_solutions]
+            "float_values": [float(sol.evalf().as_real_imag()[0]) for sol in positive_real_solutions]
         }
     except Exception as e:
         return {"has_positive_roots": False, "error": str(e)}
