@@ -23,7 +23,7 @@ async function loadExpressionsWithPositiveRoots() {
     const allExprs = [];
     
     // Generate all expressions
-    for ( const e of generateExprs( 1, 3 ) ) {
+    for ( const e of generateRegionExprs( 4 ) ) {
       allExprs.push(e);
     }
     
