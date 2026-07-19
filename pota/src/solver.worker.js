@@ -7,7 +7,7 @@ const pyodidePromise = (async () => {
 
   await pyodide.loadPackage('sympy');
 
-  const response = await fetch('/solve.py');
+  const response = await fetch(`${import.meta.env.BASE_URL}solve.py`);
   const pythonCode = await response.text();
   await pyodide.runPythonAsync(pythonCode);
 
